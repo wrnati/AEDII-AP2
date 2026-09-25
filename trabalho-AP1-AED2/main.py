@@ -52,21 +52,34 @@ def gerar_arquivo_aleatorio(quantidade_total, maior_valor, caminho_arquivo_desor
 
 
 def classificar_arquivo(caminho_arquivo_desordenado, limite_memoria, pasta_temporaria, caminho_arquivo_final): # separa os valores em blocos
-    with open(caminho_arquivo_desordenado, "r", encoding = "utf-8") as arquivo:
-        valores = arquivo.readlines()                                                           # readlines lê todas as linhas do arquivo e armazena na lista de 'valores'
+    os.makedirs(pasta_temporaria, exist_ok=True)                                                           # cria a pasta dos arquivos temporários caso ela não exista
 
-    for i in range(0, len(valores), limite_memoria):                                            # O range recebe: posição inicial, quantidade total de valores e a quantidade de posisções
-        bloco = valores[i:i + limite_memoria]                                                   # i indica onde o bloco começa, a soma com o limite_memoria indica onde o bloco termina
-        
-        bloco = [int(numero.strip()) for numero in bloco]                                       # transforma cada valor de texto em número inteiro
-        bloco = ordenacao_blocos.bubble_sort(bloco)                                             # ordena o bloco usando o Bubble Sort
+    bloco = []                                                                                             # cria uma lista vazia para armazenar os números do bloco atual
+    numero_bloco = 0                                                                                       # começa a numeração dos blocos
 
-        os.makedirs(pasta_temporaria, exist_ok = True)                                          # cria uma pasta temporária (se ela não existir ainda)
-        caminho_bloco = os.path.join(pasta_temporaria, f"bloco_{i // limite_memoria}.txt")      # cria o caminho e o nome do arquivo do bloco
+    with open(caminho_arquivo_desordenado, "r", encoding="utf-8") as arquivo:                              # abre o arquivo para leitura
+        for linha in arquivo:                                                                              # lê uma linha por vez
+            numero = int(linha.strip())                                                                    # remove a quebra de linha e deixa o valor inteiro
+            bloco.append(numero)                                                                           # adiciona o número ao bloco atual
 
-        with open(caminho_bloco, "w", encoding = "utf-8") as arquivo_bloco:
-            for numero in bloco:                                                                # percorre cada número dentro do bloco
-                arquivo_bloco.write(f"{numero}\n")                                              # grava cada número em uma linha
+            if len(bloco) == limite_memoria:                                                               # verifica se o bloco atingiu o limite de memória
+                bloco = ordenacao_blocos.bubble_sort(bloco)                                                # ordena os números do bloco
+                caminho_bloco = os.path.join(pasta_temporaria, f"bloco_{numero_bloco}.txt")
+
+                with open(caminho_bloco, "w", encoding="utf-8") as arquivo_bloco:
+                    for numero in bloco:                                                                   # percorre os números ordenados do bloco
+                        arquivo_bloco.write(f"{numero}\n")                                                 # grava cada número em uma linha
+
+                bloco = []                                                                                 # limpa a memória do bloco para reutilizá-la no próximo bloco
+                numero_bloco += 1                                                                          # passa para o número do próximo bloco
+
+        if bloco:                                                                                          # verifica se sobraram números para formar um último bloco
+            bloco = ordenacao_blocos.bubble_sort(bloco)                                                    # ordena o último bloco
+            caminho_bloco = os.path.join(pasta_temporaria, f"bloco_{numero_bloco}.txt")
+
+            with open(caminho_bloco, "w", encoding="utf-8") as arquivo_bloco:                              # cria o arquivo do último bloco
+                for numero in bloco:                                                                       # percorre os números restantes
+                    arquivo_bloco.write(f"{numero}\n")                                                     # grava cada número em uma linha
 
 if __name__ == "__main__":                                                                      # verifica se o arquivo está sendo executado
-    main()                                                                                      # chamada da função 'main'100
+    main()                                                                                      # chamada da função 'main'
